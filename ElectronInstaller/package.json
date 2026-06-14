@@ -1,0 +1,38 @@
+{
+  "name": "meloncompat-installer-electron",
+  "version": "0.7.3",
+  "description": "Electron GUI for the MelonCompat BepInEx compatibility shim installer.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable --x64"
+  },
+  "build": {
+    "appId": "dev.jayde.meloncompat.installer",
+    "productName": "MelonCompat Installer",
+    "directories": {
+      "output": "../dist/electron"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "portable"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.3.0",
+    "electron-builder": "^26.0.12"
+  }
+}
