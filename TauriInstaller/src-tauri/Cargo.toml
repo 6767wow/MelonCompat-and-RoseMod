@@ -1,0 +1,18 @@
+[package]
+name = "meloncompat-installer-tauri"
+version = "0.7.3"
+description = "Tauri GUI for the MelonCompat and RoseMod installer."
+authors = ["jayde", "OpenAI Codex"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.5.1", features = [] }
+
+[dependencies]
+base64 = "0.22.1"
+rfd = "0.15.4"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "2.9.1", features = [] }
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

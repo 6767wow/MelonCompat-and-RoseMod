@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>BepInEx.Core</AssemblyName>
+    <RootNamespace>BepInEx</RootNamespace>
+    <Version>6.0.0</Version>
+    <AssemblyVersion>6.0.0.0</AssemblyVersion>
+    <FileVersion>6.0.0.0</FileVersion>
+    <Description>Minimal BepInEx Core API facade for RoseMod.</Description>
+    <Authors>jayde; OpenAI Codex</Authors>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputPath>bin\RoseMod\BepInEx.Core\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\RoseMod\BepInEx.Core\$(Configuration)\</IntermediateOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="RoseMod\BepInExFacade\CoreFacade.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <Reference Include="SemanticVersioning">
+      <HintPath>$(UserProfile)\.nuget\packages\semanticversioning\2.0.2\lib\netstandard2.0\SemanticVersioning.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

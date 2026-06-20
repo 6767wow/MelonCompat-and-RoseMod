@@ -76,7 +76,18 @@ namespace MelonLoader.Logging
 
         public override bool Equals(object? obj) => obj is ColorARGB other && Equals(other);
 
-        public override int GetHashCode() => HashCode.Combine(A, R, G, B);
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 31 + A;
+                hash = hash * 31 + R;
+                hash = hash * 31 + G;
+                hash = hash * 31 + B;
+                return hash;
+            }
+        }
 
         public static bool operator ==(ColorARGB left, ColorARGB right) => left.Equals(right);
 
@@ -124,6 +135,7 @@ public class MelonLogger
     public static void Warning(object message) => BepInExCompat.CompatLog.Warning(message?.ToString() ?? string.Empty);
     public static void Warning(string message) => BepInExCompat.CompatLog.Warning(message);
     public static void Warning(string message, params object?[] args) => Warning(BepInExCompat.CompatLog.Format(message, args));
+    public static void Warning(string message, Exception exception) => BepInExCompat.CompatLog.Warning($"{message}{Environment.NewLine}{exception}");
     public static void LogWarning(string message) => Warning(message);
     public static void LogWarning(string message, params object?[] args) => Warning(message, args);
 
@@ -188,6 +200,7 @@ public class MelonLogger
         public void Warning(object message) => MelonLogger.Warning(Prefix(message));
         public void Warning(string message) => MelonLogger.Warning(Prefix(message));
         public void Warning(string message, params object?[] args) => Warning(BepInExCompat.CompatLog.Format(message, args));
+        public void Warning(string message, Exception exception) => MelonLogger.Warning(Prefix(message), exception);
         public void Error(object message) => MelonLogger.Error(Prefix(message));
         public void Error(string message) => MelonLogger.Error(Prefix(message));
         public void Error(string message, params object?[] args) => Error(BepInExCompat.CompatLog.Format(message, args));

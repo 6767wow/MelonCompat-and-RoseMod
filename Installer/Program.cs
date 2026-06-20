@@ -16,7 +16,7 @@ internal static class Program
             if (string.IsNullOrWhiteSpace(options.GamePath))
                 options = options with { GamePath = Prompt("Game .exe or game folder") };
 
-            if (options.MelonPaths.Count == 0 && !options.NonInteractive)
+            if (options.MelonPaths.Count == 0 && !options.NonInteractive && !options.InstallRoseMod)
             {
                 var melonInput = Prompt("MelonLoader mod DLL(s), separated by semicolon, or blank to skip");
                 foreach (var path in SplitPathList(melonInput))
@@ -29,6 +29,14 @@ internal static class Program
                 : game.Backend;
 
             PrintPlan(game, options);
+            if (options.Doctor)
+            {
+                InstallerEngine.Doctor(game, options, new ConsoleProgress());
+                Console.WriteLine();
+                Console.WriteLine("Diagnostics complete.");
+                return 0;
+            }
+
             if (!options.AssumeYes && !Confirm("Install with this plan?"))
                 return 2;
 
@@ -39,8 +47,17 @@ internal static class Program
 
             Console.WriteLine();
             Console.WriteLine(options.DryRun ? "Dry run complete. No files were changed." : "Install complete.");
-            Console.WriteLine("Start the game once so BepInEx can generate config and interop files.");
-            Console.WriteLine("Log path: " + Path.Combine(game.RootDirectory, "BepInEx", "LogOutput.log"));
+            if (options.InstallRoseMod)
+            {
+                Console.WriteLine("RoseMod path: " + Path.Combine(game.RootDirectory, "RoseMod"));
+                if (game.Backend == UnityBackend.Il2Cpp)
+                    Console.WriteLine("IL2CPP interop path: " + Path.Combine(game.RootDirectory, "RoseMod", "interop"));
+            }
+            else
+            {
+                Console.WriteLine("Start the game once so BepInEx can generate config and interop files.");
+                Console.WriteLine("Log path: " + Path.Combine(game.RootDirectory, "BepInEx", "LogOutput.log"));
+            }
             return 0;
         }
         catch (Exception ex)
@@ -56,6 +73,7 @@ internal static class Program
     {
         var bepinex = BepInExInstall.Detect(game.RootDirectory);
         var melonLoader = MelonLoaderInstall.Detect(game.RootDirectory);
+        var roseModMelons = FindRoseModMelons(game.RootDirectory);
         Console.WriteLine("Detected Unity game:");
         Console.WriteLine("  Root:    " + game.RootDirectory);
         Console.WriteLine("  Exe:     " + (game.ExecutablePath ?? "(not found)"));
@@ -64,10 +82,35 @@ internal static class Program
         Console.WriteLine("  Arch:    " + game.Architecture);
         Console.WriteLine("  BepInEx: " + (bepinex.Exists ? $"v{bepinex.MajorVersion} {bepinex.Backend}" : "not installed"));
         Console.WriteLine("  MelonLoader: " + (melonLoader.Exists ? $"installed ({melonLoader.ModDlls.Count} mod DLLs found)" : "not installed"));
-        Console.WriteLine("  BepInEx install: " + (!bepinex.Exists && options.InstallBepInEx ? "will install BepInEx 6" : "no"));
-        Console.WriteLine("  First run: " + (!bepinex.Exists && options.InstallBepInEx && options.RunGameBeforeShim ? "will launch game before shim install" : "no"));
-        Console.WriteLine("  Melons:  " + (options.MelonPaths.Count == 0 ? "(none)" : string.Join(", ", options.MelonPaths)));
+        Console.WriteLine("  RoseMod: " + (Directory.Exists(Path.Combine(game.RootDirectory, "RoseMod")) ? "installed" : "not installed"));
+        Console.WriteLine("  RoseMod install: " + (options.InstallRoseMod ? "yes" : "no"));
+        Console.WriteLine("  BepInEx install: " + BepInExPlanText(game, options, bepinex));
+        Console.WriteLine("  BepInEx removal: " + (options.RemoveBepInEx ? "yes" : "no"));
+        Console.WriteLine("  First run: " + (options.InstallBepInEx && options.RunGameBeforeShim ? "will launch game before continuing" : "no"));
+        Console.WriteLine("  Melons to install: " + (options.MelonPaths.Count == 0 ? "(none)" : string.Join(", ", options.MelonPaths)));
+        Console.WriteLine("  Installed RoseMod melons: " + (roseModMelons.Length == 0 ? "(none)" : string.Join(", ", roseModMelons.Select(Path.GetFileName))));
         Console.WriteLine();
+    }
+
+    private static string[] FindRoseModMelons(string gameRoot)
+    {
+        var melonDirectory = Path.Combine(gameRoot, "RoseMod", "MelonMods");
+        return Directory.Exists(melonDirectory)
+            ? Directory.EnumerateFiles(melonDirectory, "*.dll", SearchOption.AllDirectories)
+                .OrderBy(static path => path, StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+            : Array.Empty<string>();
+    }
+
+    private static string BepInExPlanText(GameInfo game, InstallerOptions options, BepInExInstall bepinex)
+    {
+        if (options.InstallRoseMod && game.Backend == UnityBackend.Il2Cpp && options.InstallBepInEx)
+            return "no (RoseMod installs as a standalone loader)";
+
+        if (!options.InstallRoseMod && !bepinex.Exists && options.InstallBepInEx)
+            return "will install BepInEx 6";
+
+        return "no";
     }
 
     private static string Prompt(string label)
@@ -98,12 +141,15 @@ internal static class Program
         Console.WriteLine("Options:");
         Console.WriteLine("  --melon <dll>              Copy a MelonLoader mod DLL into BepInEx/plugins/MelonLoaderMods. Can repeat.");
         Console.WriteLine("  --backend <auto|mono|il2cpp>");
-        Console.WriteLine("  --install-bepinex          Download and install BepInEx 6 if it is missing.");
-        Console.WriteLine("  --bepinex-zip <zip>        Install BepInEx 6 from a local zip instead of downloading.");
+        Console.WriteLine("  --install-rosemod         Install the optional standalone RoseMod runtime layout.");
+        Console.WriteLine("  --install-bepinex          Download and install BepInEx 6 if it is missing for the MelonCompat shim.");
+        Console.WriteLine("  --bepinex-zip <zip>        Install BepInEx 6 from a local zip, or use the archive as RoseMod's support source.");
         Console.WriteLine("  --run-game-before-shim     Launch the game once after installing BepInEx, then install the shim after the game exits.");
+        Console.WriteLine("  --remove-bepinex           With --install-rosemod, move an existing BepInEx folder into RoseMod/Backups after install.");
         Console.WriteLine("  --remove-melonloader       Remove existing MelonLoader files before installing BepInEx/shim.");
         Console.WriteLine("  --migrate-melon-mods       Copy DLLs from the MelonLoader Mods folder into BepInEx/plugins/MelonLoaderMods.");
         Console.WriteLine("  --force-payload            Replace existing MelonLoader.dll and Mono.Cecil.dll in BepInEx/plugins.");
+        Console.WriteLine("  --doctor                   Validate the selected game and embedded payload without installing.");
         Console.WriteLine("  --yes                      Do not ask for confirmation.");
         Console.WriteLine("  --dry-run                  Detect and print the plan without writing files.");
         Console.WriteLine("  --help");
@@ -123,11 +169,14 @@ internal sealed record InstallerOptions(
     UnityBackend Backend,
     List<string> MelonPaths,
     string? BepInExZipPath,
+    bool InstallRoseMod,
     bool InstallBepInEx,
     bool RunGameBeforeShim,
+    bool RemoveBepInEx,
     bool RemoveMelonLoader,
     bool MigrateMelonMods,
     bool ForcePayloadOverwrite,
+    bool Doctor,
     bool AssumeYes,
     bool DryRun,
     bool ShowHelp,
@@ -135,7 +184,7 @@ internal sealed record InstallerOptions(
 {
     public static InstallerOptions Parse(string[] args)
     {
-        var options = new InstallerOptions(null, UnityBackend.Unknown, new List<string>(), null, false, false, false, false, false, false, false, false, false);
+        var options = new InstallerOptions(null, UnityBackend.Unknown, new List<string>(), null, false, false, false, false, false, false, false, false, false, false, false, false);
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -153,6 +202,9 @@ internal sealed record InstallerOptions(
                 case "--backend":
                     options = options with { Backend = ParseBackend(RequireValue(args, ref i, arg)) };
                     break;
+                case "--install-rosemod":
+                    options = options with { InstallRoseMod = true };
+                    break;
                 case "--bepinex-zip":
                     options = options with { BepInExZipPath = RequireValue(args, ref i, arg), InstallBepInEx = true };
                     break;
@@ -164,6 +216,9 @@ internal sealed record InstallerOptions(
                 case "--run-game":
                     options = options with { RunGameBeforeShim = true };
                     break;
+                case "--remove-bepinex":
+                    options = options with { RemoveBepInEx = true };
+                    break;
                 case "--remove-melonloader":
                     options = options with { RemoveMelonLoader = true };
                     break;
@@ -174,6 +229,10 @@ internal sealed record InstallerOptions(
                     throw new ArgumentException(arg + " is no longer supported. Use --bepinex-zip for offline BepInEx installs.");
                 case "--force-payload":
                     options = options with { ForcePayloadOverwrite = true };
+                    break;
+                case "--doctor":
+                case "--diagnose":
+                    options = options with { Doctor = true, NonInteractive = true };
                     break;
                 case "--yes":
                 case "-y":

@@ -5,10 +5,17 @@ namespace MelonLoader.BepInExCompat;
 internal static class CompatLog
 {
     private static ManualLogSource? log;
+    private static string? standaloneLogPath;
 
     public static void Initialize(ManualLogSource source)
     {
         log = source;
+    }
+
+    public static void Initialize(string logFile)
+    {
+        standaloneLogPath = logFile;
+        Directory.CreateDirectory(Path.GetDirectoryName(logFile)!);
     }
 
     public static void Info(string message) => Write(LogLevel.Info, message);
@@ -49,6 +56,9 @@ internal static class CompatLog
             return;
         }
 
-        Console.WriteLine($"[{level}] {message}");
+        var line = $"[{DateTime.Now:HH:mm:ss.fff}] [{level}] {message}";
+        Console.WriteLine(line);
+        if (!string.IsNullOrWhiteSpace(standaloneLogPath))
+            File.AppendAllText(standaloneLogPath!, line + Environment.NewLine);
     }
 }

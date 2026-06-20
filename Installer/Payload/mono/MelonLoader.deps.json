@@ -1,0 +1,181 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "MelonLoader/0.7.3": {
+        "dependencies": {
+          "BepInEx.Unity.Mono": "6.0.0-be.764",
+          "HarmonyX": "2.10.2",
+          "Mono.Cecil": "0.11.6",
+          "UnityEngine": "5.6.1"
+        },
+        "runtime": {
+          "MelonLoader.dll": {}
+        }
+      },
+      "BepInEx.Core/6.0.0-be.764": {
+        "dependencies": {
+          "HarmonyX": "2.10.2",
+          "MonoMod.Utils": "22.7.31.1",
+          "SemanticVersioning": "2.0.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/BepInEx.Core.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.0.0"
+          }
+        }
+      },
+      "BepInEx.Unity.Mono/6.0.0-be.764": {
+        "dependencies": {
+          "BepInEx.Core": "6.0.0-be.764",
+          "HarmonyX": "2.10.2",
+          "UnityEngine": "5.6.1"
+        },
+        "runtime": {
+          "lib/netstandard2.0/BepInEx.Unity.Mono.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.0.0"
+          }
+        }
+      },
+      "HarmonyX/2.10.2": {
+        "dependencies": {
+          "MonoMod.RuntimeDetour": "22.3.23.4"
+        },
+        "runtime": {
+          "lib/netstandard2.0/0Harmony.dll": {
+            "assemblyVersion": "2.10.2.0",
+            "fileVersion": "2.10.2.0"
+          }
+        }
+      },
+      "Mono.Cecil/0.11.6": {
+        "runtime": {
+          "lib/netstandard2.0/Mono.Cecil.Mdb.dll": {
+            "assemblyVersion": "0.11.6.0",
+            "fileVersion": "0.11.6.0"
+          },
+          "lib/netstandard2.0/Mono.Cecil.Pdb.dll": {
+            "assemblyVersion": "0.11.6.0",
+            "fileVersion": "0.11.6.0"
+          },
+          "lib/netstandard2.0/Mono.Cecil.Rocks.dll": {
+            "assemblyVersion": "0.11.6.0",
+            "fileVersion": "0.11.6.0"
+          },
+          "lib/netstandard2.0/Mono.Cecil.dll": {
+            "assemblyVersion": "0.11.6.0",
+            "fileVersion": "0.11.6.0"
+          }
+        }
+      },
+      "MonoMod.RuntimeDetour/22.3.23.4": {
+        "dependencies": {
+          "Mono.Cecil": "0.11.6",
+          "MonoMod.Utils": "22.7.31.1"
+        },
+        "runtime": {
+          "lib/net5.0/MonoMod.RuntimeDetour.dll": {
+            "assemblyVersion": "22.3.23.4",
+            "fileVersion": "22.3.23.4"
+          }
+        }
+      },
+      "MonoMod.Utils/22.7.31.1": {
+        "dependencies": {
+          "Mono.Cecil": "0.11.6"
+        },
+        "runtime": {
+          "lib/net5.0/MonoMod.Utils.dll": {
+            "assemblyVersion": "22.7.31.1",
+            "fileVersion": "22.7.31.1"
+          }
+        }
+      },
+      "SemanticVersioning/2.0.2": {
+        "runtime": {
+          "lib/netstandard2.0/SemanticVersioning.dll": {
+            "assemblyVersion": "2.0.2.0",
+            "fileVersion": "2.0.2.0"
+          }
+        }
+      },
+      "UnityEngine/5.6.1": {
+        "runtime": {
+          "lib/netstandard2.0/UnityEngine.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "MelonLoader/0.7.3": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BepInEx.Core/6.0.0-be.764": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-YYtia6oXPXCeCkvom3bgI3lzzMx3LrbOCRpRmV540SXd2PWFidmDP60Jdcg3UHOuIv8d4mBCpUOZrBxq1QBdcw==",
+      "path": "bepinex.core/6.0.0-be.764",
+      "hashPath": "bepinex.core.6.0.0-be.764.nupkg.sha512"
+    },
+    "BepInEx.Unity.Mono/6.0.0-be.764": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Dx1FIf7OXZ7OgQ9+DVSDTad5u1eJ4tQ0qUMyP7CXKx7yFJc6+YpgECUiNA4Pvl3vkLWYxchmhpu5x61HcwGBxQ==",
+      "path": "bepinex.unity.mono/6.0.0-be.764",
+      "hashPath": "bepinex.unity.mono.6.0.0-be.764.nupkg.sha512"
+    },
+    "HarmonyX/2.10.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/5WwkxXX8mPsRuigQt957rJGx1f0dDQxk+bvk4yYITKFjXas9Em+O71zEP8X0ym8OFQQ2XH/2SxS4NC7vEC+Xg==",
+      "path": "harmonyx/2.10.2",
+      "hashPath": "harmonyx.2.10.2.nupkg.sha512"
+    },
+    "Mono.Cecil/0.11.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-f33RkDtZO8VlGXCtmQIviOtxgnUdym9xx/b1p9h91CRGOsJFxCFOFK1FDbVt1OCf1aWwYejUFa2MOQyFWTFjbA==",
+      "path": "mono.cecil/0.11.6",
+      "hashPath": "mono.cecil.0.11.6.nupkg.sha512"
+    },
+    "MonoMod.RuntimeDetour/22.3.23.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2nwwFfwYDSgUzhi+1MutTg1gyUgXoMS4+E04vHOFp84Vxs0oBkkn4mGAfhkr272y0j3vqIBzo2aT9pXRlCd/ZA==",
+      "path": "monomod.runtimedetour/22.3.23.4",
+      "hashPath": "monomod.runtimedetour.22.3.23.4.nupkg.sha512"
+    },
+    "MonoMod.Utils/22.7.31.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nI0E1oadXS1iMbfwfCzYF08C1jRQR9cnnHv66a4BSPd4sGu2p6g4BmctCWsdAB6oGKkSJUhcfHfxcfTsDyB94Q==",
+      "path": "monomod.utils/22.7.31.1",
+      "hashPath": "monomod.utils.22.7.31.1.nupkg.sha512"
+    },
+    "SemanticVersioning/2.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4EQgYdNZ92SyaO7YFk6olVnebF5V+jrHyMUjvPq89tLeMo8NSfgDF+6Zwq/lgh9j/0yfQp9Lkm0ZA0rUATCZFA==",
+      "path": "semanticversioning/2.0.2",
+      "hashPath": "semanticversioning.2.0.2.nupkg.sha512"
+    },
+    "UnityEngine/5.6.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uAhM+pBtZH7CvGCBQyT9CaksT9M4fzTCIMetYjOEocuFiQGF38uGgS8q5xUd1HddaeXwDG9VrMARHGz5IXhQLw==",
+      "path": "unityengine/5.6.1",
+      "hashPath": "unityengine.5.6.1.nupkg.sha512"
+    }
+  }
+}

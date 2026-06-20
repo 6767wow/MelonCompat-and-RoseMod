@@ -1,0 +1,177 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "RoseMod.Il2CppFixes/0.1.0": {
+        "dependencies": {
+          "HarmonyX": "2.10.2",
+          "Il2CppInterop.Runtime": "1.5.1"
+        },
+        "runtime": {
+          "RoseMod.Il2CppFixes.dll": {}
+        }
+      },
+      "HarmonyX/2.10.2": {
+        "dependencies": {
+          "MonoMod.RuntimeDetour": "22.3.23.4"
+        },
+        "runtime": {
+          "lib/netstandard2.0/0Harmony.dll": {
+            "assemblyVersion": "2.10.2.0",
+            "fileVersion": "2.10.2.0"
+          }
+        }
+      },
+      "Iced/1.17.0": {
+        "runtime": {
+          "lib/netstandard2.1/Iced.dll": {
+            "assemblyVersion": "1.17.0.0",
+            "fileVersion": "1.17.0.0"
+          }
+        }
+      },
+      "Il2CppInterop.Common/1.5.1": {
+        "dependencies": {
+          "Iced": "1.17.0",
+          "Microsoft.Extensions.Logging.Abstractions": "6.0.1"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Il2CppInterop.Common.dll": {
+            "assemblyVersion": "1.5.1.0",
+            "fileVersion": "1.5.1.0"
+          }
+        }
+      },
+      "Il2CppInterop.Runtime/1.5.1": {
+        "dependencies": {
+          "Iced": "1.17.0",
+          "Il2CppInterop.Common": "1.5.1"
+        },
+        "runtime": {
+          "lib/net6.0/Il2CppInterop.Runtime.dll": {
+            "assemblyVersion": "1.5.1.0",
+            "fileVersion": "1.5.1.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/6.0.1": {
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.322.12309"
+          }
+        }
+      },
+      "Mono.Cecil/0.11.4": {
+        "runtime": {
+          "lib/netstandard2.0/Mono.Cecil.Mdb.dll": {
+            "assemblyVersion": "0.11.4.0",
+            "fileVersion": "0.11.4.0"
+          },
+          "lib/netstandard2.0/Mono.Cecil.Pdb.dll": {
+            "assemblyVersion": "0.11.4.0",
+            "fileVersion": "0.11.4.0"
+          },
+          "lib/netstandard2.0/Mono.Cecil.Rocks.dll": {
+            "assemblyVersion": "0.11.4.0",
+            "fileVersion": "0.11.4.0"
+          },
+          "lib/netstandard2.0/Mono.Cecil.dll": {
+            "assemblyVersion": "0.11.4.0",
+            "fileVersion": "0.11.4.0"
+          }
+        }
+      },
+      "MonoMod.RuntimeDetour/22.3.23.4": {
+        "dependencies": {
+          "Mono.Cecil": "0.11.4",
+          "MonoMod.Utils": "22.3.23.4"
+        },
+        "runtime": {
+          "lib/net5.0/MonoMod.RuntimeDetour.dll": {
+            "assemblyVersion": "22.3.23.4",
+            "fileVersion": "22.3.23.4"
+          }
+        }
+      },
+      "MonoMod.Utils/22.3.23.4": {
+        "dependencies": {
+          "Mono.Cecil": "0.11.4"
+        },
+        "runtime": {
+          "lib/net5.0/MonoMod.Utils.dll": {
+            "assemblyVersion": "22.3.23.4",
+            "fileVersion": "22.3.23.4"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "RoseMod.Il2CppFixes/0.1.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "HarmonyX/2.10.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/5WwkxXX8mPsRuigQt957rJGx1f0dDQxk+bvk4yYITKFjXas9Em+O71zEP8X0ym8OFQQ2XH/2SxS4NC7vEC+Xg==",
+      "path": "harmonyx/2.10.2",
+      "hashPath": "harmonyx.2.10.2.nupkg.sha512"
+    },
+    "Iced/1.17.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8x+HCVTl/HHTGpscH3vMBhV8sknN/muZFw9s3TsI8SA6+c43cOTCi2+jE4KsU8pNLbJ++iF2ZFcpcXHXtDglnw==",
+      "path": "iced/1.17.0",
+      "hashPath": "iced.1.17.0.nupkg.sha512"
+    },
+    "Il2CppInterop.Common/1.5.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zhdgWvokrijvzE1doZKQ5GgLE+NMfv8eAicS6qruyhL4ImoshU/kyXkTmjn/1fiKFhmEaifpXJFSTNdpymUkvw==",
+      "path": "il2cppinterop.common/1.5.1",
+      "hashPath": "il2cppinterop.common.1.5.1.nupkg.sha512"
+    },
+    "Il2CppInterop.Runtime/1.5.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-6K5RIapelXpzFj1hcZau44y3fCdF4r06Npmklt/QjvIpL765BeEHy7ixTHvoz0EcLPPWYPzQrtAgvdqV7Gk/hA==",
+      "path": "il2cppinterop.runtime/1.5.1",
+      "hashPath": "il2cppinterop.runtime.1.5.1.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging.Abstractions/6.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dzB2Cgg+JmrouhjkcQGzSFjjvpwlq353i8oBQO2GWNjCXSzhbtBRUf28HSauWe7eib3wYOdb3tItdjRwAdwCSg==",
+      "path": "microsoft.extensions.logging.abstractions/6.0.1",
+      "hashPath": "microsoft.extensions.logging.abstractions.6.0.1.nupkg.sha512"
+    },
+    "Mono.Cecil/0.11.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IC1h5g0NeJGHIUgzM1P82ld57knhP0IcQfrYITDPXlNpMYGUrsG5TxuaWTjaeqDNQMBDNZkB8L0rBnwsY6JHuQ==",
+      "path": "mono.cecil/0.11.4",
+      "hashPath": "mono.cecil.0.11.4.nupkg.sha512"
+    },
+    "MonoMod.RuntimeDetour/22.3.23.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2nwwFfwYDSgUzhi+1MutTg1gyUgXoMS4+E04vHOFp84Vxs0oBkkn4mGAfhkr272y0j3vqIBzo2aT9pXRlCd/ZA==",
+      "path": "monomod.runtimedetour/22.3.23.4",
+      "hashPath": "monomod.runtimedetour.22.3.23.4.nupkg.sha512"
+    },
+    "MonoMod.Utils/22.3.23.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xso1rHFfcsPy3X1kj2uDk115z9tLTMxPEnba/zdNB6WazvrLRWGPuV9d4hHwr1iVz5quTFlZCbLBlE5fS2TqLA==",
+      "path": "monomod.utils/22.3.23.4",
+      "hashPath": "monomod.utils.22.3.23.4.nupkg.sha512"
+    }
+  }
+}

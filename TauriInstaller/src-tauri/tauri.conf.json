@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MelonCompat Installer",
+  "version": "0.7.3",
+  "identifier": "dev.jayde.meloncompat.installer.tauri",
+  "build": {
+    "beforeBuildCommand": "npm run build:frontend",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "MelonCompat Installer",
+        "width": 900,
+        "height": 760,
+        "minWidth": 720,
+        "minHeight": 620,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": false,
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "resources": [
+      "../backend/MelonCompatInstaller.exe",
+      "../backend/MelonCompatInstaller.pdb"
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MelonCompat Installer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <div class="brand-logos" aria-hidden="true">
+          <img class="brand-logo" src="./logo-cropped.png" alt="" />
+          <img class="brand-logo rose-logo" src="./rosemod-logo.png" alt="" />
+        </div>
+        <div class="brand-copy">
+          <h1>MelonCompat</h1>
+          <p>Tauri installer for MelonCompat and RoseMod</p>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="Installer mode">
+        <button class="tab-button active" type="button" data-tab="meloncompat">MelonCompat</button>
+        <button class="tab-button" type="button" data-tab="rosemod">RoseMod</button>
+      </nav>
+
+      <section class="toolbar">
+        <div class="search-wrap">
+          <input id="search" type="search" placeholder="Search installed Unity games..." />
+        </div>
+        <button id="refresh" class="icon-button" title="Refresh games">Refresh</button>
+        <button id="diagnose" class="secondary" disabled>Diagnostics</button>
+        <button id="addGame" class="secondary">Add Game</button>
+      </section>
+
+      <section class="content">
+        <div id="games" class="game-list" aria-label="Detected games"></div>
+      </section>
+
+      <div id="meloncompatPanel" class="tab-panel active">
+        <section class="details">
+          <div>
+            <h2 id="selectedName">No game selected</h2>
+            <p id="selectedMeta">Select a Unity game to install or update MelonCompat.</p>
+          </div>
+          <div class="actions">
+            <label class="check">
+              <input id="forcePayload" type="checkbox" checked />
+              <span>Replace shim files</span>
+            </label>
+            <button id="pickMelons" class="secondary">Melon DLLs</button>
+            <button id="install" class="primary" disabled>Install</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="rosemodPanel" class="tab-panel">
+        <section class="details">
+          <div>
+            <h2 id="rosemodName">No game selected</h2>
+            <p id="rosemodMeta">Select a Unity game to install the optional RoseMod loader.</p>
+          </div>
+          <div class="actions">
+            <button id="installRoseMod" class="primary" disabled>Install RoseMod</button>
+          </div>
+        </section>
+      </div>
+
+      <section class="log-wrap">
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

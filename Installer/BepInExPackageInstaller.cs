@@ -10,9 +10,7 @@ internal static class BepInExPackageInstaller
 
     public static async Task InstallAsync(GameInfo game, string? localZipPath, IProgress<string>? progress)
     {
-        var zipPath = string.IsNullOrWhiteSpace(localZipPath)
-            ? await DownloadLatestPackageAsync(game, progress)
-            : Path.GetFullPath(localZipPath.Trim('"'));
+        var zipPath = await ResolvePackageAsync(game, localZipPath, progress);
 
         if (!File.Exists(zipPath))
             throw new FileNotFoundException("BepInEx package zip was not found.", zipPath);
@@ -22,7 +20,45 @@ internal static class BepInExPackageInstaller
         progress?.Report("Installed BepInEx package files.");
     }
 
-    private static async Task<string> DownloadLatestPackageAsync(GameInfo game, IProgress<string>? progress)
+    public static Task<string> ResolvePackageAsync(GameInfo game, string? localZipPath, IProgress<string>? progress, string packageDescription = "BepInEx 6 package")
+    {
+        if (!string.IsNullOrWhiteSpace(localZipPath))
+            return Task.FromResult(Path.GetFullPath(localZipPath.Trim('"')));
+
+        return DownloadLatestPackageAsync(game, progress, packageDescription);
+    }
+
+    public static void ExtractSelectedEntries(string zipPath, string destination, Func<string, bool> includeEntry, Func<string, string> mapEntry)
+    {
+        if (!File.Exists(zipPath))
+            throw new FileNotFoundException("Package zip was not found.", zipPath);
+
+        var root = Path.GetFullPath(destination);
+        var rootWithSeparator = root.EndsWith(Path.DirectorySeparatorChar)
+            ? root
+            : root + Path.DirectorySeparatorChar;
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        foreach (var entry in archive.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name))
+                continue;
+
+            var normalized = entry.FullName.Replace('\\', '/');
+            if (!includeEntry(normalized))
+                continue;
+
+            var mapped = mapEntry(normalized).Replace('/', Path.DirectorySeparatorChar);
+            var outputPath = Path.GetFullPath(Path.Combine(root, mapped));
+            if (!outputPath.StartsWith(rootWithSeparator, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Package contains an unsafe path: " + entry.FullName);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            entry.ExtractToFile(outputPath, overwrite: true);
+        }
+    }
+
+    private static async Task<string> DownloadLatestPackageAsync(GameInfo game, IProgress<string>? progress, string packageDescription)
     {
         var target = game.Backend switch
         {
@@ -32,7 +68,7 @@ internal static class BepInExPackageInstaller
         };
 
         var runtime = game.Architecture == ProcessArchitecture.X86 ? "win-x86" : "win-x64";
-        progress?.Report($"Finding latest BepInEx 6 package for {target} {runtime}...");
+        progress?.Report($"Finding latest {packageDescription} for {target} {runtime}...");
 
         using var http = NewHttpClient();
         var html = await http.GetStringAsync(BepInExBuildsUrl);
@@ -52,11 +88,11 @@ internal static class BepInExPackageInstaller
 
         if (File.Exists(destination) && new FileInfo(destination).Length > 0)
         {
-            progress?.Report("Using cached BepInEx package: " + destination);
+            progress?.Report($"Using cached {packageDescription}: " + destination);
             return destination;
         }
 
-        progress?.Report("Downloading BepInEx package: " + url);
+        progress?.Report($"Downloading {packageDescription}: " + url);
         using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
         await using var source = await response.Content.ReadAsStreamAsync();
@@ -89,7 +125,10 @@ internal static class BepInExPackageInstaller
 
     private static HttpClient NewHttpClient()
     {
-        var client = new HttpClient();
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(5)
+        };
         client.DefaultRequestHeaders.UserAgent.ParseAdd("MelonCompatInstaller/0.7.3");
         return client;
     }

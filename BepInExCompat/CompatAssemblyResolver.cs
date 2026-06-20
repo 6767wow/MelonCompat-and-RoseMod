@@ -23,21 +23,19 @@ internal static class CompatAssemblyResolver
 
     public static void IndexDirectory(string directory)
     {
+        IndexDirectory(directory, includeProvidedAssemblies: false);
+    }
+
+    public static void IndexDirectory(string directory, bool includeProvidedAssemblies)
+    {
         if (!Directory.Exists(directory))
             return;
 
         foreach (var path in Directory.EnumerateFiles(directory, "*.dll", SearchOption.AllDirectories))
         {
-            try
-            {
-                var name = AssemblyName.GetAssemblyName(path).Name;
-                if (!string.IsNullOrWhiteSpace(name) && !IsProvidedByBepInExOrGame(name!))
-                    AssemblyPaths[name!] = path;
-            }
-            catch
-            {
-                // Ignore native or invalid DLLs in plugin folders.
-            }
+            var name = Path.GetFileNameWithoutExtension(path);
+            if (!string.IsNullOrWhiteSpace(name) && (includeProvidedAssemblies || !IsProvidedByBepInExOrGame(name)))
+                AssemblyPaths[name] = path;
         }
     }
 
@@ -49,6 +47,11 @@ internal static class CompatAssemblyResolver
 
         if (requestedName.Equals("MelonLoader", StringComparison.OrdinalIgnoreCase))
             return typeof(MelonMod).Assembly;
+
+        var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(assembly => string.Equals(assembly.GetName().Name, requestedName, StringComparison.OrdinalIgnoreCase));
+        if (loadedAssembly is not null)
+            return loadedAssembly;
 
         lock (Gate)
         {

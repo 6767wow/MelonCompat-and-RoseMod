@@ -1,19 +1,32 @@
 using System.Reflection;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace MelonLoader.BepInExCompat;
 
 internal static class InteropNamespaceRewriter
 {
     private static readonly HashSet<string> GlobalAssemblyCSharpTypes = new(StringComparer.Ordinal);
+    private static readonly List<string> DependencyDirectories = new();
+    private static string? InteropRootPath;
     private static bool initialized;
 
     public static void Initialize(string bepinexRootPath)
+    {
+        Initialize(bepinexRootPath, Array.Empty<string>());
+    }
+
+    public static void Initialize(string bepinexRootPath, string[] dependencyDirectories)
     {
         if (initialized)
             return;
 
         initialized = true;
+        InteropRootPath = bepinexRootPath;
+        DependencyDirectories.Clear();
+        AddDependencyDirectory(Path.Combine(bepinexRootPath, "interop"));
+        foreach (var directory in dependencyDirectories)
+            AddDependencyDirectory(directory);
 
         var assemblyCSharpPath = Path.Combine(bepinexRootPath, "interop", "Assembly-CSharp.dll");
         if (!File.Exists(assemblyCSharpPath))
@@ -24,7 +37,8 @@ internal static class InteropNamespaceRewriter
 
         try
         {
-            using var module = ModuleDefinition.ReadModule(assemblyCSharpPath);
+            using var resolver = CreateResolver(assemblyCSharpPath);
+            using var module = ModuleDefinition.ReadModule(assemblyCSharpPath, new ReaderParameters { AssemblyResolver = resolver });
             foreach (var type in Flatten(module.Types))
             {
                 if (string.IsNullOrEmpty(type.Namespace))
@@ -41,14 +55,18 @@ internal static class InteropNamespaceRewriter
 
     public static Assembly LoadAssemblyWithFixups(string path)
     {
-        if (GlobalAssemblyCSharpTypes.Count == 0)
-            return Assembly.LoadFrom(path);
-
         try
         {
-            using var module = ModuleDefinition.ReadModule(path, new ReaderParameters { ReadWrite = false, InMemory = true });
+            using var resolver = CreateResolver(path);
+            using var module = ModuleDefinition.ReadModule(path, new ReaderParameters
+            {
+                ReadWrite = false,
+                InMemory = true,
+                AssemblyResolver = resolver
+            });
             var typeReferenceRewriteCount = 0;
             var stringRewriteCount = 0;
+            var unityCompatibilityRewriteCount = 0;
 
             foreach (var reference in module.GetTypeReferences())
             {
@@ -61,14 +79,14 @@ internal static class InteropNamespaceRewriter
 
             RewriteAttributes(module.Assembly.CustomAttributes, ref typeReferenceRewriteCount, ref stringRewriteCount);
             foreach (var type in Flatten(module.Types))
-                RewriteMember(type, ref typeReferenceRewriteCount, ref stringRewriteCount);
+                RewriteMember(type, ref typeReferenceRewriteCount, ref stringRewriteCount, ref unityCompatibilityRewriteCount);
 
-            if (typeReferenceRewriteCount == 0 && stringRewriteCount == 0)
+            if (typeReferenceRewriteCount == 0 && stringRewriteCount == 0 && unityCompatibilityRewriteCount == 0)
                 return Assembly.LoadFrom(path);
 
             using var output = new MemoryStream();
             module.Write(output);
-            CompatLog.Info($"Rewrote {typeReferenceRewriteCount} Assembly-CSharp Il2Cpp type reference(s) and {stringRewriteCount} string reference(s) in {Path.GetFileName(path)} before loading.");
+            CompatLog.Info($"Rewrote {typeReferenceRewriteCount} Assembly-CSharp Il2Cpp type reference(s), {stringRewriteCount} string reference(s), and {unityCompatibilityRewriteCount} Unity compatibility call(s) in {Path.GetFileName(path)} before loading.");
             return Assembly.Load(output.ToArray());
         }
         catch (Exception ex)
@@ -76,6 +94,34 @@ internal static class InteropNamespaceRewriter
             CompatLog.Warning($"Failed to apply Il2Cpp namespace fixups to {Path.GetFileName(path)}: {ex.Message}");
             return Assembly.LoadFrom(path);
         }
+    }
+
+    private static void AddDependencyDirectory(string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+            return;
+
+        var fullPath = Path.GetFullPath(directory);
+        if (!DependencyDirectories.Any(path => path.Equals(fullPath, StringComparison.OrdinalIgnoreCase)))
+            DependencyDirectories.Add(fullPath);
+    }
+
+    private static DefaultAssemblyResolver CreateResolver(string primaryAssemblyPath)
+    {
+        var resolver = new DefaultAssemblyResolver();
+        AddResolverDirectory(resolver, Path.GetDirectoryName(primaryAssemblyPath));
+        AddResolverDirectory(resolver, InteropRootPath is null ? null : Path.Combine(InteropRootPath, "interop"));
+        foreach (var directory in DependencyDirectories)
+            AddResolverDirectory(resolver, directory);
+        return resolver;
+    }
+
+    private static void AddResolverDirectory(DefaultAssemblyResolver resolver, string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+            return;
+
+        resolver.AddSearchDirectory(Path.GetFullPath(directory));
     }
 
     private static bool IsAssemblyCSharpReference(IMetadataScope scope)
@@ -90,7 +136,7 @@ internal static class InteropNamespaceRewriter
             && GlobalAssemblyCSharpTypes.Contains(reference.Name);
     }
 
-    private static void RewriteMember(TypeDefinition type, ref int typeReferenceRewriteCount, ref int stringRewriteCount)
+    private static void RewriteMember(TypeDefinition type, ref int typeReferenceRewriteCount, ref int stringRewriteCount, ref int physicsRewriteCount)
     {
         RewriteAttributes(type.CustomAttributes, ref typeReferenceRewriteCount, ref stringRewriteCount);
 
@@ -106,30 +152,81 @@ internal static class InteropNamespaceRewriter
         foreach (var method in type.Methods)
         {
             RewriteAttributes(method.CustomAttributes, ref typeReferenceRewriteCount, ref stringRewriteCount);
-            RewriteMethodBodyStrings(method, ref stringRewriteCount);
+            RewriteMethodBody(method, ref stringRewriteCount, ref physicsRewriteCount);
 
             foreach (var parameter in method.Parameters)
                 RewriteAttributes(parameter.CustomAttributes, ref typeReferenceRewriteCount, ref stringRewriteCount);
         }
     }
 
-    private static void RewriteMethodBodyStrings(MethodDefinition method, ref int stringRewriteCount)
+    private static void RewriteMethodBody(MethodDefinition method, ref int stringRewriteCount, ref int physicsRewriteCount)
     {
         if (!method.HasBody)
             return;
 
         foreach (var instruction in method.Body.Instructions)
         {
-            if (instruction.Operand is not string value)
+            if (instruction.Operand is string value && TryRewriteIl2CppTypeString(value, out var rewritten))
+            {
+                instruction.Operand = rewritten;
+                stringRewriteCount++;
                 continue;
+            }
 
-            if (!TryRewriteIl2CppTypeString(value, out var rewritten))
-                continue;
-
-            instruction.Operand = rewritten;
-            stringRewriteCount++;
+#if !BEPINEX_MONO
+            if (TryRewriteUnityCompatibilityCall(method.Module, instruction))
+                physicsRewriteCount++;
+#endif
         }
     }
+
+#if !BEPINEX_MONO
+    private static bool TryRewriteUnityCompatibilityCall(ModuleDefinition module, Instruction instruction)
+    {
+        if (instruction.OpCode.Code is not (Code.Call or Code.Callvirt))
+            return false;
+
+        if (instruction.Operand is not MethodReference method)
+            return false;
+
+        MethodInfo? replacement = null;
+        if (method.DeclaringType.FullName.Equals("UnityEngine.Rigidbody", StringComparison.Ordinal))
+        {
+            replacement = method.Name switch
+            {
+                "set_linearVelocity" => typeof(UnityPhysicsCompatibility).GetMethod(nameof(UnityPhysicsCompatibility.SetLinearVelocity), BindingFlags.Public | BindingFlags.Static),
+                "set_angularVelocity" => typeof(UnityPhysicsCompatibility).GetMethod(nameof(UnityPhysicsCompatibility.SetAngularVelocity), BindingFlags.Public | BindingFlags.Static),
+                _ => null
+            };
+        }
+        else if (method.DeclaringType.FullName.Equals("UnityEngine.Collider", StringComparison.Ordinal)
+            && method.Name.Equals("ClosestPoint", StringComparison.Ordinal)
+            && method.Parameters.Count == 1
+            && method.Parameters[0].ParameterType.FullName.Equals("UnityEngine.Vector3", StringComparison.Ordinal))
+        {
+            replacement = typeof(UnityPhysicsCompatibility).GetMethod(nameof(UnityPhysicsCompatibility.ClosestPoint), BindingFlags.Public | BindingFlags.Static);
+        }
+        else if (method.DeclaringType.FullName.Equals("UnityEngine.Physics", StringComparison.Ordinal)
+            && method.Name.Equals("ClosestPoint", StringComparison.Ordinal))
+        {
+            replacement = typeof(UnityPhysicsCompatibility).GetMethod(nameof(UnityPhysicsCompatibility.PhysicsClosestPoint), BindingFlags.Public | BindingFlags.Static);
+        }
+        else if (method.DeclaringType.FullName.Equals("UnityEngine.MonoBehaviour", StringComparison.Ordinal)
+            && method.Name.Equals("StartCoroutine", StringComparison.Ordinal)
+            && method.Parameters.Count == 1
+            && method.Parameters[0].ParameterType.FullName.Equals("System.String", StringComparison.Ordinal))
+        {
+            replacement = typeof(UnityPhysicsCompatibility).GetMethod(nameof(UnityPhysicsCompatibility.StartCoroutineString), BindingFlags.Public | BindingFlags.Static);
+        }
+
+        if (replacement is null)
+            return false;
+
+        instruction.OpCode = OpCodes.Call;
+        instruction.Operand = module.ImportReference(replacement);
+        return true;
+    }
+#endif
 
     private static void RewriteAttributes(Mono.Collections.Generic.Collection<CustomAttribute> attributes, ref int typeReferenceRewriteCount, ref int stringRewriteCount)
     {
@@ -193,7 +290,7 @@ internal static class InteropNamespaceRewriter
         if (!value.StartsWith(prefix, StringComparison.Ordinal))
             return false;
 
-        var typeName = value[prefix.Length..];
+        var typeName = value.Substring(prefix.Length);
         if (!GlobalAssemblyCSharpTypes.Contains(typeName))
             return false;
 

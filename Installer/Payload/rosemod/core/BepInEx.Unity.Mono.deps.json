@@ -1,0 +1,24 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.0/",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.0": {},
+    ".NETStandard,Version=v2.0/": {
+      "BepInEx.Unity.Mono/6.0.0": {
+        "runtime": {
+          "BepInEx.Unity.Mono.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BepInEx.Unity.Mono/6.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

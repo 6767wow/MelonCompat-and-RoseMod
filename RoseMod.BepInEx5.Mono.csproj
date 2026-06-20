@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>BepInEx</AssemblyName>
+    <RootNamespace>BepInEx</RootNamespace>
+    <Version>5.4.23.5</Version>
+    <AssemblyVersion>5.4.23.5</AssemblyVersion>
+    <FileVersion>5.4.23.5</FileVersion>
+    <Description>BepInEx 5 Mono API facade for RoseMod.</Description>
+    <Authors>jayde; OpenAI Codex</Authors>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS8632</NoWarn>
+    <DefineConstants>$(DefineConstants);BEPINEX5_MONO</DefineConstants>
+    <OutputPath>bin\RoseMod\BepInEx5.Mono\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\RoseMod\BepInEx5.Mono\$(Configuration)\</IntermediateOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <UnityReferencePath Condition="'$(UnityReferencePath)' == ''">$(MSBuildThisFileDirectory).scratch\refs\baldi-mono</UnityReferencePath>
+    <AssemblySearchPaths>$(UnityReferencePath);{HintPathFromItem};{TargetFrameworkDirectory};{RawFileName}</AssemblySearchPaths>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="RoseMod\BepInExFacade\CoreFacade.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <Reference Include="SemanticVersioning">
+      <HintPath>$(UserProfile)\.nuget\packages\semanticversioning\2.0.2\lib\netstandard2.0\SemanticVersioning.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(UnityReferencePath)\UnityEngine.CoreModule.dll</HintPath>
+      <SpecificVersion>false</SpecificVersion>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

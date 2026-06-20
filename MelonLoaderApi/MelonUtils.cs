@@ -1,7 +1,8 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
-using HarmonyLib;
+using HarmonyMethodX = HarmonyLib.HarmonyMethod;
+using HarmonyX = HarmonyLib.Harmony;
 
 namespace MelonLoader;
 
@@ -36,9 +37,9 @@ public static class MelonUtils
     public static string GameVersion => string.Empty;
     public static string HashCode => BuildInfo.Version;
     public static PlatformID GetPlatform => Environment.OSVersion.Platform;
-    public static bool IsWindows => OperatingSystem.IsWindows();
-    public static bool IsMac => OperatingSystem.IsMacOS();
-    public static bool IsUnix => OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
+    public static bool IsWindows => GetPlatform is PlatformID.Win32NT or PlatformID.Win32S or PlatformID.Win32Windows or PlatformID.WinCE;
+    public static bool IsMac => GetPlatform == PlatformID.MacOSX;
+    public static bool IsUnix => GetPlatform == PlatformID.Unix || IsMac;
     public static MelonGameAttribute CurrentGameAttribute => new(GameDeveloper, GameName);
     public static MelonPlatformAttribute.CompatiblePlatforms CurrentPlatform => IsWindows && Environment.Is64BitProcess
         ? MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X64
@@ -54,7 +55,7 @@ public static class MelonUtils
         MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP;
 #endif
 
-    public static string GetApplicationPath() => Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+    public static string GetApplicationPath() => Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
     public static string GetGameDataDirectory() => Path.Combine(GameDirectory, $"{GameName}_Data");
     public static string GetManagedDirectory() => Path.Combine(GetGameDataDirectory(), "Managed");
     public static string GetUnityVersion() => UnityVersion;
@@ -136,11 +137,11 @@ public static class MelonUtils
     public static IntPtr GetNativeLibraryExport(IntPtr library, string name) => IntPtr.Zero;
     public static void NativeHookAttach(IntPtr target, IntPtr detour) { }
     public static void NativeHookDetach(IntPtr target, IntPtr detour) { }
-    public static void TryPatchAll(Harmony harmony, Assembly assembly) => harmony.PatchAll(assembly);
-    public static List<MethodInfo> TryPatchAll(Harmony harmony, Assembly assembly, bool log) { harmony.PatchAll(assembly); return new List<MethodInfo>(); }
-    public static void TryPatchAll(Harmony harmony, Type type) => harmony.PatchAll(type);
-    public static List<MethodInfo> TryPatchAll(Harmony harmony, Type type, bool log) { harmony.PatchAll(type); return new List<MethodInfo>(); }
-    public static HarmonyMethod ToNewHarmonyMethod(MethodInfo method) => new(method);
+    public static void TryPatchAll(HarmonyX harmony, Assembly assembly) => harmony.PatchAll(assembly);
+    public static List<MethodInfo> TryPatchAll(HarmonyX harmony, Assembly assembly, bool log) { harmony.PatchAll(assembly); return new List<MethodInfo>(); }
+    public static void TryPatchAll(HarmonyX harmony, Type type) => harmony.PatchAll(type);
+    public static List<MethodInfo> TryPatchAll(HarmonyX harmony, Type type, bool log) { harmony.PatchAll(type); return new List<MethodInfo>(); }
+    public static HarmonyMethodX ToNewHarmonyMethod(MethodInfo method) => new(method);
 
     private static string ComputeHash(string path, HashAlgorithm algorithm)
     {

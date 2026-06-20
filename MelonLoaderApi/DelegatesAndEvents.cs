@@ -12,6 +12,12 @@ public delegate void LemonAction<in T1, in T2, in T3, in T4, in T5, in T6, in T7
 public delegate TResult LemonFunc<out TResult>();
 public delegate TResult LemonFunc<in T1, out TResult>(T1 arg1);
 public delegate TResult LemonFunc<in T1, in T2, out TResult>(T1 arg1, T2 arg2);
+public delegate TResult LemonFunc<in T1, in T2, in T3, out TResult>(T1 arg1, T2 arg2, T3 arg3);
+public delegate TResult LemonFunc<in T1, in T2, in T3, in T4, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4);
+public delegate TResult LemonFunc<in T1, in T2, in T3, in T4, in T5, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5);
+public delegate TResult LemonFunc<in T1, in T2, in T3, in T4, in T5, in T6, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6);
+public delegate TResult LemonFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7);
+public delegate TResult LemonFunc<in T1, in T2, in T3, in T4, in T5, in T6, in T7, in T8, out TResult>(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8);
 
 public class MelonEventBase<T>
     where T : Delegate
@@ -68,6 +74,20 @@ public class MelonEventBase<T>
         return subscribers.Select(s => new MelonEventSubscriber<T>(s.Delegate, s.Priority, s.UnsubscribeOnFirstInvocation)).ToArray();
     }
 
+    public sealed class MelonEventSubscriber
+    {
+        public MelonEventSubscriber(T subscriber, int priority, bool unsubscribeOnFirstInvocation)
+        {
+            Subscriber = subscriber;
+            Priority = priority;
+            UnsubscribeOnFirstInvocation = unsubscribeOnFirstInvocation;
+        }
+
+        public T Subscriber { get; }
+        public int Priority { get; }
+        public bool UnsubscribeOnFirstInvocation { get; }
+    }
+
     protected void InvokeSubscribers(params object?[] args)
     {
         if (Disposed)
@@ -104,7 +124,19 @@ public class MelonEventBase<T>
         public bool UnsubscribeOnFirstInvocation { get; }
     }
 
-    private sealed record Subscriber(T Delegate, int Priority, bool UnsubscribeOnFirstInvocation);
+    private sealed class Subscriber
+    {
+        public Subscriber(T subscriber, int priority, bool unsubscribeOnFirstInvocation)
+        {
+            Delegate = subscriber;
+            Priority = priority;
+            UnsubscribeOnFirstInvocation = unsubscribeOnFirstInvocation;
+        }
+
+        public T Delegate { get; }
+        public int Priority { get; }
+        public bool UnsubscribeOnFirstInvocation { get; }
+    }
 }
 
 public sealed class MelonEvent : MelonEventBase<LemonAction>

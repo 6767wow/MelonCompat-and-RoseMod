@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
-using HarmonyLib;
+using HarmonyX = HarmonyLib.Harmony;
 using MelonLoader.Logging;
 
 namespace MelonLoader;
@@ -13,7 +13,8 @@ public abstract class MelonBase
     {
         Info = new MelonInfoAttribute(GetType(), GetType().Name, "0.0.0", "Unknown", null);
         LoggerInstance = new MelonLogger.Instance(GetType().Name);
-        HarmonyInstance = new Harmony(BuildHarmonyId(GetType().FullName ?? GetType().Name));
+        HarmonyInstance = new HarmonyX(BuildHarmonyId(GetType().FullName ?? GetType().Name));
+        Harmony = new global::Harmony.HarmonyInstance(BuildHarmonyId(GetType().FullName ?? GetType().Name));
     }
 
     public static readonly MelonEvent<MelonBase> OnMelonRegistered = new();
@@ -40,8 +41,9 @@ public abstract class MelonBase
     public MelonPlatformDomainAttribute SupportedDomain { get; private set; } = new(MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP);
     public VerifyLoaderVersionAttribute? SupportedMLVersion { get; private set; }
     public VerifyLoaderBuildAttribute? SupportedMLBuild { get; private set; }
-    public Harmony HarmonyInstance { get; private set; }
-    public Harmony harmonyInstance => HarmonyInstance;
+    public global::Harmony.HarmonyInstance Harmony { get; private set; }
+    public HarmonyX HarmonyInstance { get; private set; }
+    public global::Harmony.HarmonyInstance harmonyInstance => Harmony;
     public MelonLogger.Instance LoggerInstance { get; private set; }
     public string ID { get; private set; } = string.Empty;
     public bool Registered { get; private set; }
@@ -121,6 +123,43 @@ public abstract class MelonBase
     {
         var method = GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         return method?.Invoke(this, args);
+    }
+
+    public virtual Incompatibility[] FindIncompatiblities(
+        MelonGameAttribute currentGame,
+        string currentGameVersion,
+        string currentProcessName,
+        string currentMLVersion,
+        string currentMLBuild,
+        MelonPlatformAttribute.CompatiblePlatforms currentPlatform,
+        MelonPlatformDomainAttribute.CompatibleDomains currentDomain)
+    {
+        return Array.Empty<Incompatibility>();
+    }
+
+    public virtual Incompatibility[] FindIncompatiblities(
+        MelonGameAttribute currentGame,
+        string currentGameVersion,
+        string currentProcessName,
+        Semver.SemVersion currentMLVersion,
+        string currentMLBuild,
+        MelonPlatformAttribute.CompatiblePlatforms currentPlatform,
+        MelonPlatformDomainAttribute.CompatibleDomains currentDomain)
+    {
+        return Array.Empty<Incompatibility>();
+    }
+
+    public virtual Incompatibility[] FindIncompatiblitiesFromContext()
+    {
+        return Array.Empty<Incompatibility>();
+    }
+
+    public static void PrintIncompatibilities(Incompatibility[] incompatibilities, MelonBase melon)
+    {
+        if (incompatibilities.Length == 0)
+            return;
+
+        melon.LoggerInstance.Warning("Compatibility warnings: " + string.Join(", ", incompatibilities));
     }
 
     public virtual bool Register()
@@ -274,7 +313,8 @@ public abstract class MelonBase
         AuthorConsoleColor = authorColor ?? MelonLogger.DefaultTextColor;
         ID = string.IsNullOrWhiteSpace(id) ? BuildHarmonyId($"{info.Author}.{info.Name}") : id!;
         LoggerInstance = new MelonLogger.Instance(info.Name, ConsoleColor);
-        HarmonyInstance = new Harmony(ID);
+        HarmonyInstance = new HarmonyX(ID);
+        Harmony = new global::Harmony.HarmonyInstance(ID);
         MelonAssembly = MelonAssembly.GetOrCreate(assembly, location);
     }
 
@@ -306,14 +346,15 @@ public abstract class MelonBase
         return string.IsNullOrWhiteSpace(safe) ? Guid.NewGuid().ToString("N") : safe;
     }
 
-    public sealed class Incompatibility
+    public enum Incompatibility
     {
-        public Incompatibility(string reason)
-        {
-            Reason = reason;
-        }
-
-        public string Reason { get; }
+        Game,
+        ProcessName,
+        Platform,
+        Domain,
+        MLVersion,
+        MLBuild,
+        GameVersion
     }
 }
 

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>BepInEx.Unity.IL2CPP</AssemblyName>
+    <RootNamespace>BepInEx.Unity.IL2CPP</RootNamespace>
+    <Version>6.0.0</Version>
+    <AssemblyVersion>6.0.0.0</AssemblyVersion>
+    <FileVersion>6.0.0.0</FileVersion>
+    <Description>Minimal BepInEx Unity IL2CPP API facade for RoseMod.</Description>
+    <Authors>jayde; OpenAI Codex</Authors>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputPath>bin\RoseMod\BepInEx.Unity.IL2CPP\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\RoseMod\BepInEx.Unity.IL2CPP\$(Configuration)\</IntermediateOutputPath>
+    <AssemblySearchPaths>{HintPathFromItem};{TargetFrameworkDirectory};{RawFileName}</AssemblySearchPaths>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="RoseMod\BepInExFacade\UnityIl2CppFacade.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx.Core">
+      <HintPath>$(MSBuildThisFileDirectory)bin\RoseMod\BepInEx.Core\$(Configuration)\netstandard2.0\BepInEx.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

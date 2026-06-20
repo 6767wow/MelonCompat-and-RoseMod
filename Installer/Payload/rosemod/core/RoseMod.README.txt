@@ -1,0 +1,24 @@
+RoseMod 0.2.0 experimental standalone runtime
+
+Installed layout:
+
+- winhttp.dll: native C++ bootstrap/proxy at the game root
+- RoseMod/Core: managed compatibility host and facade DLLs loaded by the native bootstrap
+- RoseMod/MelonMods: MelonLoader-style mods
+- RoseMod/BepInExPlugins: BepInEx-style plugins
+- RoseMod/Patchers: BepInEx preloader-style patchers
+- BepInEx/patchers: compatibility view for older BepInEx 5 mods/tools when no real BepInEx install is present
+- RoseMod/interop: generated IL2CPP Unity/game interop assemblies
+- RoseMod/Il2CppAssemblies: optional extra IL2CPP interop assemblies
+- RoseMod/UserData and RoseMod/UserLibs: shared user files
+- RoseMod/Logs: native and managed runtime logs
+
+The MelonCompat installer installs RoseMod's own native C++ winhttp.dll bootstrap at the game root.
+Existing winhttp.dll, doorstop_config.ini, and .doorstop_version files are backed up under RoseMod/Backups before RoseMod replaces them.
+Native startup logs are written to RoseMod/Logs/RoseMod.native.log. Managed loader logs are written to RoseMod/Logs/RoseMod.log.
+For IL2CPP games, RoseMod uses generated interop assemblies in RoseMod/interop or RoseMod/Il2CppAssemblies. The installer can generate these assemblies itself without BepInEx. If an existing BepInEx/interop folder is present during install, it is copied into RoseMod/interop as a shortcut, but RoseMod does not depend on BepInEx at runtime.
+When installing RoseMod into a game that already has BepInEx, the GUI can move the BepInEx folder into RoseMod/Backups after RoseMod is installed.
+
+RoseMod is experimental. It provides a shared loader foundation and compatibility facades, but some advanced MelonLoader or BepInEx mods may still require more API coverage.
+BepInEx patcher support is included for runtime/Harmony-style patchers, BepInEx 5 static TargetDLLs/Initialize/Patch patchers, and common Cecil target methods. Cecil-patched assemblies are written to RoseMod/PatchedAssemblies; if Unity has already loaded the target assembly, RoseMod logs that a true earlier preloader stage is needed for that specific rewrite.
+For BepInEx 5 Mono plugin-type serialization, RoseMod installs a managed Unity clone fallback before plugin activation. It patches Unity clone/instantiate paths and copies serialized fields for plugin MonoBehaviours from RoseMod/BepInExPlugins or RoseMod/MelonMods.

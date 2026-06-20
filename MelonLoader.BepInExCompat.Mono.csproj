@@ -18,19 +18,27 @@
     <NoWarn>$(NoWarn);CS8632</NoWarn>
     <OutputPath>bin\Mono\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\Mono\$(Configuration)\</IntermediateOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Installer\**\*.cs;.scratch\**\*.cs" />
-    <EmbeddedResource Remove="Installer\**\*;.scratch\**\*" />
-    <None Remove="Installer\**\*;.scratch\**\*" />
-    <Compile Remove="BepInExCompat\MelonEventPumpBehaviour.cs" />
+    <Compile Include="NullableAttributes.cs" />
+    <Compile Include="MelonLoaderApi\**\*.cs" />
+    <Compile Include="BepInExCompat\CompatAssemblyResolver.cs" />
+    <Compile Include="BepInExCompat\CompatExceptionDiagnostics.cs" />
+    <Compile Include="BepInExCompat\CompatLog.cs" />
+    <Compile Include="BepInExCompat\CompatUnityDriver.cs" />
+    <Compile Include="BepInExCompat\InteropNamespaceRewriter.cs" />
+    <Compile Include="BepInExCompat\MelonAssemblyLoader.cs" />
+    <Compile Include="BepInExCompat\Plugin.Mono.cs" />
+    <Compile Include="BepInExCompat\SkippedHarmonyPatchSubstitutes.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Unity.Mono" Version="6.0.0-be.764" PrivateAssets="all" />
     <PackageReference Include="HarmonyX" Version="2.10.2" PrivateAssets="all" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <PackageReference Include="UnityEngine" Version="5.6.1" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

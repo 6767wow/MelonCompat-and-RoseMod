@@ -3,6 +3,44 @@ namespace MelonLoader.Preferences
     public class ValueValidator
     {
         public virtual bool IsValid(object? value) => true;
+        public virtual object? EnsureValid(object? value) => value;
+    }
+
+    public interface IValueRange
+    {
+        object? Min { get; }
+        object? Max { get; }
+    }
+
+    public class ValueRange<T> : ValueValidator, IValueRange
+        where T : IComparable
+    {
+        public ValueRange(T minValue, T maxValue)
+        {
+            MinValue = minValue;
+            MaxValue = maxValue;
+        }
+
+        public T MinValue { get; }
+        public T MaxValue { get; }
+        public object? Min => MinValue;
+        public object? Max => MaxValue;
+
+        public override bool IsValid(object? value)
+        {
+            return value is T typed && typed.CompareTo(MinValue) >= 0 && typed.CompareTo(MaxValue) <= 0;
+        }
+
+        public override object? EnsureValid(object? value)
+        {
+            if (value is not T typed)
+                return MinValue;
+
+            if (typed.CompareTo(MinValue) < 0)
+                return MinValue;
+
+            return typed.CompareTo(MaxValue) > 0 ? MaxValue : typed;
+        }
     }
 
     public class MelonPreferences_ReflectiveCategory : MelonLoader.MelonPreferences_Category
@@ -290,15 +328,32 @@ public class MelonPreferences_Entry<T> : MelonPreferences_Entry
     }
 }
 
-public static class MelonPrefs
+public class MelonPrefs
 {
     private static readonly Dictionary<string, Dictionary<string, MelonPreference>> Preferences = new(StringComparer.OrdinalIgnoreCase);
 
-    public sealed class MelonPreference
+    public enum MelonPreferenceType
+    {
+        STRING,
+        BOOL,
+        INT,
+        FLOAT
+    }
+
+    public class MelonPreference
     {
         public object? Value { get; set; }
+        public object? ValueEdited { get; set; }
         public string Description { get; set; } = string.Empty;
         public bool IsHidden { get; set; }
+        public string DisplayText => Description;
+        public MelonPreferenceType Type => Value switch
+        {
+            bool => MelonPreferenceType.BOOL,
+            int or long or byte => MelonPreferenceType.INT,
+            float or double or decimal => MelonPreferenceType.FLOAT,
+            _ => MelonPreferenceType.STRING
+        };
     }
 
     public static Dictionary<string, Dictionary<string, MelonPreference>> GetPreferences() => Preferences;
@@ -358,5 +413,51 @@ public static class MelonPrefs
             Preferences[category] = entries = new Dictionary<string, MelonPreference>(StringComparer.OrdinalIgnoreCase);
         return entries;
     }
+}
+
+public class ModPrefs : MelonPrefs
+{
+    public enum PrefType
+    {
+        STRING,
+        BOOL,
+        INT,
+        FLOAT
+    }
+
+    public class PrefDesc : MelonPreference
+    {
+        public PrefDesc()
+        {
+        }
+
+        public PrefDesc(MelonPreference preference)
+        {
+            Value = preference.Value?.ToString() ?? string.Empty;
+            ValueEdited = preference.ValueEdited?.ToString() ?? Value;
+            DisplayText = preference.DisplayText;
+            Hidden = preference.IsHidden;
+            Type = (PrefType)preference.Type;
+        }
+
+        public new string Value { get; set; } = string.Empty;
+        public new string ValueEdited { get; set; } = string.Empty;
+        public new string DisplayText { get; set; } = string.Empty;
+        public bool Hidden { get; set; }
+        public new PrefType Type { get; set; }
+    }
+
+    public static Dictionary<string, Dictionary<string, PrefDesc>> GetPrefs()
+    {
+        return GetPreferences().ToDictionary(
+            category => category.Key,
+            category => category.Value.ToDictionary(entry => entry.Key, entry => new PrefDesc(entry.Value)),
+            StringComparer.OrdinalIgnoreCase);
+    }
+
+    public static void RegisterPrefString(string section, string name, string defaultValue, string displayText = "", bool hideFromList = false) => RegisterString(section, name, defaultValue, displayText, hideFromList);
+    public static void RegisterPrefBool(string section, string name, bool defaultValue, string displayText = "", bool hideFromList = false) => RegisterBool(section, name, defaultValue, displayText, hideFromList);
+    public static void RegisterPrefInt(string section, string name, int defaultValue, string displayText = "", bool hideFromList = false) => RegisterInt(section, name, defaultValue, displayText, hideFromList);
+    public static void RegisterPrefFloat(string section, string name, float defaultValue, string displayText = "", bool hideFromList = false) => RegisterFloat(section, name, defaultValue, displayText, hideFromList);
 }
 }

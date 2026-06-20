@@ -1,0 +1,14 @@
+{
+  "name": "meloncompat-installer-tauri",
+  "version": "0.7.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:frontend": "node scripts/build-frontend.js",
+    "build": "tauri build --no-bundle",
+    "dev": "tauri dev"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.2"
+  }
+}

@@ -15,14 +15,18 @@
     <DefineConstants>$(DefineConstants);BEPINEX_IL2CPP</DefineConstants>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <NoWarn>$(NoWarn);CS8632</NoWarn>
-    <GameInteropPath Condition="'$(GameInteropPath)' == ''">D:\SteamLibrary\steamapps\common\Granny\BepInEx\interop</GameInteropPath>
+    <NoWarn>$(NoWarn);CS8632;NU1603</NoWarn>
+    <OutputPath>bin\BepInEx\IL2CPP\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\BepInEx\IL2CPP\$(Configuration)\</IntermediateOutputPath>
+    <GameInteropPath Condition="'$(GameInteropPath)' == '' and Exists('D:\SteamLibrary\steamapps\common\Granny\BepInEx\interop\UnityEngine.CoreModule.dll')">D:\SteamLibrary\steamapps\common\Granny\BepInEx\interop</GameInteropPath>
+    <GameInteropPath Condition="'$(GameInteropPath)' == ''">D:\SteamLibrary\steamapps\common\Granny\RoseMod\interop</GameInteropPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Installer\**\*.cs;.scratch\**\*.cs" />
-    <EmbeddedResource Remove="Installer\**\*;.scratch\**\*" />
-    <None Remove="Installer\**\*;.scratch\**\*" />
+    <Compile Include="NullableAttributes.cs" />
+    <Compile Include="MelonLoaderApi\**\*.cs" />
+    <Compile Include="BepInExCompat\**\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,11 +36,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="UnityEngine">
+    <Reference Include="UnityEngine" Condition="!Exists('$(GameInteropPath)\UnityEngine.CoreModule.dll')">
       <HintPath>$(GameInteropPath)\UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule">
+    <Reference Include="UnityEngine.CoreModule" Condition="Exists('$(GameInteropPath)\UnityEngine.CoreModule.dll')">
       <HintPath>$(GameInteropPath)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>

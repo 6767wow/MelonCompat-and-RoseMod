@@ -48,8 +48,8 @@ public sealed class SemVersion : IComparable, IComparable<SemVersion>, ISerializ
         if (string.IsNullOrWhiteSpace(version))
             return false;
 
-        var buildSplit = version.Split('+', 2);
-        var prereleaseSplit = buildSplit[0].Split('-', 2);
+        var buildSplit = version.Split(new[] { '+' }, 2);
+        var prereleaseSplit = buildSplit[0].Split(new[] { '-' }, 2);
         var parts = prereleaseSplit[0].Split('.');
         if (parts.Length < 1 || parts.Length > 3)
             return false;
@@ -117,7 +117,19 @@ public sealed class SemVersion : IComparable, IComparable<SemVersion>, ISerializ
 
     public override bool Equals(object? obj) => obj is SemVersion other && CompareTo(other) == 0 && string.Equals(Build, other.Build, StringComparison.OrdinalIgnoreCase);
 
-    public override int GetHashCode() => HashCode.Combine(Major, Minor, Patch, Prerelease.ToLowerInvariant(), Build.ToLowerInvariant());
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 31 + Major;
+            hash = hash * 31 + Minor;
+            hash = hash * 31 + Patch;
+            hash = hash * 31 + Prerelease.ToLowerInvariant().GetHashCode();
+            hash = hash * 31 + Build.ToLowerInvariant().GetHashCode();
+            return hash;
+        }
+    }
 
     public void GetObjectData(SerializationInfo info, StreamingContext context)
     {
