@@ -14,6 +14,10 @@ It supports both Unity backends:
 
 It targets MelonLoader mod DLLs made for MelonLoader 0.5.7 through 0.7.3. This is a compatibility layer, not the full MelonLoader runtime, so some mods that depend on deeper MelonLoader internals may still need fixes.
 
+## Documentation
+
+The full project wiki source is checked into [`docs/wiki/Home.md`](docs/wiki/Home.md). It includes the RoseMod journey, architecture notes, installer behavior, build guide, compatibility testing checklist, runtime log guide, and a detailed [`Error Catalog`](docs/wiki/Error-Catalog.md) covering the major crashes, warnings, facade failures, interop problems, and build issues found while making MelonCompat and RoseMod.
+
 ## For Players
 
 Download the release zip, extract it, and run:
