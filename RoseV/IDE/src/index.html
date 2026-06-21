@@ -9,14 +9,27 @@
   <body>
     <div class="shell">
       <aside class="activity" aria-label="Primary">
-        <button class="activity-button active" data-panel="files" title="Files">F</button>
-        <button class="activity-button" data-panel="symbols" title="Symbols">S</button>
-        <button class="activity-button" data-panel="help" title="RoseV Help">?</button>
+        <div class="activity-logo" title="RoseMod">
+          <img src="./assets/rosemod-logo.png" alt="" />
+        </div>
+        <button class="activity-button active" data-panel="files" title="Files">Files</button>
+        <button class="activity-button" data-panel="symbols" title="Outline and snippets">Code</button>
+        <button class="activity-button" data-panel="help" title="RoseV Help">Help</button>
       </aside>
 
       <aside class="sidebar">
         <section class="panel active" id="panel-files">
-          <div class="panel-title">Explorer</div>
+          <div class="profile-card">
+            <img src="./assets/rosemod-logo.png" alt="" />
+            <div>
+              <strong>RoseMod</strong>
+              <span>RoseV workspace</span>
+            </div>
+          </div>
+          <div class="panel-heading">
+            <span class="panel-title">Explorer</span>
+            <span id="workspaceCount" class="panel-count">0 files</span>
+          </div>
           <div class="action-grid">
             <button id="newFile">New</button>
             <button id="openFile">Open</button>
@@ -29,22 +42,27 @@
         </section>
 
         <section class="panel" id="panel-symbols">
-          <div class="panel-title">Outline</div>
+          <div class="panel-heading">
+            <span class="panel-title">Outline</span>
+            <span id="outlineCount" class="panel-count">0 symbols</span>
+          </div>
           <div id="outline" class="outline"></div>
           <div class="panel-title tight">Snippets</div>
-          <button class="snippet" data-snippet="load">when load</button>
-          <button class="snippet" data-snippet="update">when update</button>
-          <button class="snippet" data-snippet="function">function</button>
-          <button class="snippet" data-snippet="import">import</button>
-          <button class="snippet" data-snippet="setting">setting</button>
-          <button class="snippet" data-snippet="field">field</button>
-          <button class="snippet" data-snippet="if">if</button>
-          <button class="snippet" data-snippet="key">key press</button>
-          <button class="snippet" data-snippet="unity">unity escape</button>
-          <button class="snippet" data-snippet="csharp">C# block</button>
-          <button class="snippet" data-snippet="members">C# members</button>
-          <button class="snippet" data-snippet="unitySynvert">Unity C#</button>
-          <button class="snippet" data-snippet="native">native</button>
+          <div class="snippet-grid">
+            <button class="snippet" data-snippet="load">when load</button>
+            <button class="snippet" data-snippet="update">when update</button>
+            <button class="snippet" data-snippet="function">function</button>
+            <button class="snippet" data-snippet="import">import</button>
+            <button class="snippet" data-snippet="setting">setting</button>
+            <button class="snippet" data-snippet="field">field</button>
+            <button class="snippet" data-snippet="if">if</button>
+            <button class="snippet" data-snippet="key">key press</button>
+            <button class="snippet" data-snippet="unity">unity escape</button>
+            <button class="snippet" data-snippet="csharp">C# block</button>
+            <button class="snippet" data-snippet="members">C# members</button>
+            <button class="snippet" data-snippet="unitySynvert">Unity C#</button>
+            <button class="snippet" data-snippet="native">native</button>
+          </div>
         </section>
 
         <section class="panel" id="panel-help">
@@ -80,11 +98,15 @@
 
       <main class="workbench">
         <header class="topbar">
-          <div>
-            <strong>RoseV IDE</strong>
-            <span id="filePath" class="file-path">Untitled.rosev</span>
+          <div class="brand">
+            <img class="brand-avatar" src="./assets/rosemod-logo.png" alt="" />
+            <div class="brand-copy">
+              <strong>RoseV IDE</strong>
+              <span id="filePath" class="file-path">Untitled.rosev</span>
+            </div>
           </div>
           <div class="toolbar">
+            <button id="formatFile">Format</button>
             <button id="saveFile">Save</button>
             <button id="compileFile" class="primary">Compile</button>
             <button id="commandButton">Commands</button>
@@ -99,12 +121,13 @@
         <section class="editor-wrap">
           <div class="line-numbers" id="lineNumbers">1</div>
           <textarea id="editor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
-          <div class="guide">
-            <div class="guide-title">Fast Guide</div>
-            <div><b>Compile</b> creates a generated C# backend file.</div>
-            <div><b>Save</b> writes the current .rosev file.</div>
-            <div><b>Ctrl+Shift+P</b> opens commands.</div>
-          </div>
+        </section>
+
+        <section class="statusbar">
+          <span id="modeStatus">Desktop app</span>
+          <span id="cursorPosition">Ln 1, Col 1</span>
+          <span id="diagnosticSummary">No issues</span>
+          <span id="compileState">Ready</span>
         </section>
 
         <section class="bottom-panel">

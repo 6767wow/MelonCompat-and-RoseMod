@@ -83,7 +83,9 @@ const state = {
   contents: sample,
   dirty: false,
   workspace: [],
-  diagnostics: []
+  diagnostics: [],
+  compiling: false,
+  status: "Ready"
 };
 
 const editor = document.getElementById("editor");
@@ -93,12 +95,19 @@ const currentTab = document.getElementById("currentTab");
 const dirtyFlag = document.getElementById("dirtyFlag");
 const fileList = document.getElementById("fileList");
 const outline = document.getElementById("outline");
+const workspaceCount = document.getElementById("workspaceCount");
+const outlineCount = document.getElementById("outlineCount");
 const diagnosticsEl = document.getElementById("bottom-diagnostics");
 const outputEl = document.getElementById("bottom-output");
 const generatedEl = document.getElementById("bottom-generated");
 const palette = document.getElementById("palette");
 const paletteInput = document.getElementById("paletteInput");
 const paletteList = document.getElementById("paletteList");
+const compileButton = document.getElementById("compileFile");
+const modeStatus = document.getElementById("modeStatus");
+const cursorPosition = document.getElementById("cursorPosition");
+const diagnosticSummary = document.getElementById("diagnosticSummary");
+const compileState = document.getElementById("compileState");
 
 const commands = [
   { name: "New RoseV File", detail: "Create an empty RoseV source", run: newFile },
@@ -106,6 +115,7 @@ const commands = [
   { name: "Open Folder", detail: "Open a workspace folder", run: openFolder },
   { name: "Save File", detail: "Save the current file", run: saveFile },
   { name: "Compile RoseV", detail: "Generate C# from the current RoseV file", run: compileFile },
+  { name: "Format Document", detail: "Normalize indentation and trim trailing space", run: formatDocument },
   { name: "Load Everything Sample", detail: "Replace editor contents with a sample", run: loadSample },
   { name: "Insert when load", detail: "Add a load lifecycle block", run: () => insertSnippet("load") },
   { name: "Insert when update", detail: "Add an update lifecycle block", run: () => insertSnippet("update") },
@@ -130,7 +140,8 @@ document.getElementById("openFile").addEventListener("click", openFile);
 document.getElementById("openFolder").addEventListener("click", openFolder);
 document.getElementById("loadSample").addEventListener("click", loadSample);
 document.getElementById("saveFile").addEventListener("click", saveFile);
-document.getElementById("compileFile").addEventListener("click", compileFile);
+document.getElementById("formatFile").addEventListener("click", formatDocument);
+compileButton.addEventListener("click", compileFile);
 document.getElementById("commandButton").addEventListener("click", openPalette);
 
 for (const button of document.querySelectorAll(".activity-button")) {
@@ -155,10 +166,21 @@ editor.addEventListener("scroll", () => {
   lineNumbers.scrollTop = editor.scrollTop;
 });
 
+editor.addEventListener("click", renderCursor);
+editor.addEventListener("keyup", renderCursor);
+editor.addEventListener("select", renderCursor);
+
 editor.addEventListener("keydown", event => {
   if (event.key === "Tab") {
     event.preventDefault();
-    insertText("  ");
+    indentSelection(event.shiftKey ? -1 : 1);
+    return;
+  }
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    smartNewLine();
+    return;
   }
 });
 
@@ -166,6 +188,18 @@ document.addEventListener("keydown", event => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
     event.preventDefault();
     saveFile();
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "o") {
+    event.preventDefault();
+    openFile();
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    event.preventDefault();
+    compileFile();
+  }
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "f") {
+    event.preventDefault();
+    formatDocument();
   }
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "p") {
     event.preventDefault();
@@ -207,36 +241,52 @@ when load {
 `;
   state.dirty = false;
   editor.value = state.contents;
+  setStatus("New file ready");
   renderAll();
 }
 
 async function openFile() {
   if (!invoke) {
     appendOutput("Open File needs the Tauri desktop app. Use the sample or paste code in browser preview.");
+    setStatus("Open needs desktop app");
     return;
   }
   if (!confirmDirty()) return;
 
-  const file = await invoke("open_file");
-  if (file) applyFile(file);
+  try {
+    const file = await invoke("open_file");
+    if (file) applyFile(file);
+  } catch (error) {
+    appendOutput(`Open failed: ${formatError(error)}`);
+    setStatus("Open failed");
+  }
 }
 
 async function openFolder() {
   if (!invoke) {
     appendOutput("Open Folder needs the Tauri desktop app.");
+    setStatus("Folder needs desktop app");
     return;
   }
 
-  state.workspace = await invoke("open_folder");
-  renderFiles();
+  try {
+    state.workspace = await invoke("open_folder");
+    renderFiles();
+    const fileCount = state.workspace.filter(entry => entry.kind === "file").length;
+    setStatus(`Opened ${fileCount} ${fileCount === 1 ? "file" : "files"}`);
+  } catch (error) {
+    appendOutput(`Open folder failed: ${formatError(error)}`);
+    setStatus("Open folder failed");
+  }
 }
 
 async function saveFile() {
   if (!invoke) {
     downloadText(state.name, state.contents);
     state.dirty = false;
+    setStatus("Downloaded file");
     renderChrome();
-    return;
+    return true;
   }
 
   try {
@@ -248,25 +298,35 @@ async function saveFile() {
     });
     applyFile(file);
     appendOutput(`Saved ${file.path}`);
+    setStatus("Saved file");
+    return true;
   } catch (error) {
     appendOutput(`Save failed: ${formatError(error)}`);
+    setStatus("Save failed");
+    return false;
   }
 }
 
 async function compileFile() {
+  if (state.compiling) return;
   setBottom("output");
   outputEl.textContent = "";
 
   if (!invoke) {
     appendOutput("Compile needs the Tauri desktop app so it can run RoseV.exe.");
     appendOutput("Browser preview can edit and validate syntax only.");
+    setStatus("Compile needs desktop app");
     return;
   }
 
+  setCompiling(true);
+  setStatus("Compiling...");
+
   try {
-    if (state.dirty) {
+    if (!state.path || state.dirty) {
       appendOutput("Saving before compile...");
-      await saveFile();
+      const saved = await saveFile();
+      if (!saved) return;
     }
 
     const result = await invoke("compile_rosev", {
@@ -281,10 +341,17 @@ async function compileFile() {
     if (result.ok) {
       const generated = await invoke("read_file", { path: result.outputPath });
       generatedEl.textContent = generated.contents;
+      appendOutput(`Generated ${result.outputPath}`);
+      setStatus("Compile complete");
       setBottom("generated");
+    } else {
+      setStatus("Compile failed");
     }
   } catch (error) {
     appendOutput(`Compile failed: ${formatError(error)}`);
+    setStatus("Compile failed");
+  } finally {
+    setCompiling(false);
   }
 }
 
@@ -303,22 +370,30 @@ async function loadSample() {
   state.name = "EverythingSample.rosev";
   state.dirty = false;
   editor.value = state.contents;
+  setStatus("Loaded sample");
   renderAll();
 }
 
 async function openWorkspaceFile(path) {
   if (!invoke) return;
   if (!confirmDirty()) return;
-  const file = await invoke("read_file", { path });
-  applyFile(file);
+  try {
+    const file = await invoke("read_file", { path });
+    applyFile(file);
+  } catch (error) {
+    appendOutput(`Open workspace file failed: ${formatError(error)}`);
+    setStatus("Open failed");
+  }
 }
 
 function applyFile(file) {
+  if (!file) return;
   state.path = file.path;
   state.name = file.name;
   state.contents = file.contents;
   state.dirty = false;
   editor.value = state.contents;
+  setStatus(`Opened ${state.name}`);
   renderAll();
 }
 
@@ -327,12 +402,17 @@ function renderAll() {
   renderLines();
   renderOutline();
   renderDiagnostics();
+  renderCursor();
 }
 
 function renderChrome() {
   filePath.textContent = state.path || "Unsaved file";
   currentTab.textContent = state.name;
   dirtyFlag.textContent = state.dirty ? "Unsaved changes" : "";
+  modeStatus.textContent = invoke ? "Desktop app" : "Browser preview";
+  compileState.textContent = state.compiling ? "Compiling..." : state.status;
+  compileButton.textContent = state.compiling ? "Compiling" : "Compile";
+  compileButton.disabled = state.compiling;
 }
 
 function renderLines() {
@@ -342,6 +422,9 @@ function renderLines() {
 
 function renderFiles() {
   fileList.innerHTML = "";
+  const fileCount = state.workspace.filter(entry => entry.kind === "file").length;
+  workspaceCount.textContent = `${fileCount} ${fileCount === 1 ? "file" : "files"}`;
+
   if (!state.workspace.length) {
     fileList.innerHTML = `<div class="empty">No RoseV workspace open.</div>`;
     return;
@@ -363,12 +446,13 @@ function renderOutline() {
   const lines = state.contents.split(/\r?\n/);
   lines.forEach((line, index) => {
     const trimmed = line.trim();
-    if (/^(rosev|namespace|class|setting|when)\b/.test(trimmed)) {
+    if (/^(rosev|namespace|class|setting|field|native|make|when|synvert)\b/.test(trimmed)) {
       items.push({ line: index + 1, text: trimmed });
     }
   });
 
   outline.innerHTML = "";
+  outlineCount.textContent = `${items.length} ${items.length === 1 ? "symbol" : "symbols"}`;
   if (!items.length) {
     outline.innerHTML = `<div class="empty">No symbols yet.</div>`;
     return;
@@ -386,6 +470,15 @@ function renderOutline() {
 function renderDiagnostics() {
   state.diagnostics = validateRoseV(state.contents);
   diagnosticsEl.innerHTML = "";
+  const errors = state.diagnostics.filter(diagnostic => diagnostic.level === "error").length;
+  const warnings = state.diagnostics.filter(diagnostic => diagnostic.level === "warn").length;
+  diagnosticSummary.className = errors ? "status-error" : warnings ? "status-warn" : "status-ok";
+  diagnosticSummary.textContent = errors
+    ? `${errors} ${errors === 1 ? "error" : "errors"}`
+    : warnings
+      ? `${warnings} ${warnings === 1 ? "warning" : "warnings"}`
+      : "No issues";
+
   if (!state.diagnostics.length) {
     diagnosticsEl.innerHTML = `<div class="diagnostic"><div class="level info">Info</div><div>No obvious RoseV syntax issues.</div></div>`;
     return;
@@ -398,6 +491,107 @@ function renderDiagnostics() {
     row.addEventListener("click", () => gotoLine(diagnostic.line));
     diagnosticsEl.appendChild(row);
   }
+}
+
+function renderCursor() {
+  const start = editor.selectionStart || 0;
+  const end = editor.selectionEnd || start;
+  const before = editor.value.slice(0, start);
+  const lines = before.split(/\r?\n/);
+  const line = lines.length;
+  const column = lines[lines.length - 1].length + 1;
+  const selected = Math.abs(end - start);
+  cursorPosition.textContent = `Ln ${line}, Col ${column}${selected ? `, ${selected} selected` : ""}`;
+}
+
+function setStatus(message) {
+  state.status = message;
+  renderChrome();
+}
+
+function setCompiling(value) {
+  state.compiling = value;
+  renderChrome();
+}
+
+function indentSelection(direction) {
+  const start = editor.selectionStart;
+  const end = editor.selectionEnd;
+
+  if (direction > 0 && start === end) {
+    insertText("  ");
+    return;
+  }
+
+  const value = editor.value;
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+
+  if (start === end) {
+    const line = value.slice(lineStart, value.indexOf("\n", lineStart) === -1 ? value.length : value.indexOf("\n", lineStart));
+    const removeCount = line.startsWith("  ") ? 2 : line.startsWith("\t") || line.startsWith(" ") ? 1 : 0;
+    if (!removeCount) return;
+
+    editor.setRangeText("", lineStart, lineStart + removeCount, "end");
+    const cursor = Math.max(lineStart, start - removeCount);
+    editor.setSelectionRange(cursor, cursor);
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+    editor.focus();
+    return;
+  }
+
+  const selectedEnd = end > start && value[end - 1] === "\n" ? end - 1 : end;
+  const nextBreak = value.indexOf("\n", selectedEnd);
+  const blockEnd = nextBreak === -1 ? value.length : nextBreak;
+  const block = value.slice(lineStart, blockEnd);
+  const lines = block.split("\n");
+  const replacement = lines.map(line => {
+    if (direction > 0) return `  ${line}`;
+    if (line.startsWith("  ")) return line.slice(2);
+    if (line.startsWith("\t") || line.startsWith(" ")) return line.slice(1);
+    return line;
+  }).join("\n");
+
+  editor.setRangeText(replacement, lineStart, blockEnd, "end");
+  editor.setSelectionRange(lineStart, lineStart + replacement.length);
+  editor.dispatchEvent(new Event("input", { bubbles: true }));
+  editor.focus();
+}
+
+function smartNewLine() {
+  const start = editor.selectionStart;
+  const value = editor.value;
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+  const lineBeforeCursor = value.slice(lineStart, start);
+  const indent = (lineBeforeCursor.match(/^\s*/) || [""])[0];
+  const extra = lineBeforeCursor.trim().endsWith("{") ? "  " : "";
+  insertText(`\n${indent}${extra}`);
+}
+
+function formatDocument() {
+  const cursor = editor.selectionStart;
+  const formatted = formatRoseVSource(editor.value);
+  state.contents = formatted;
+  state.dirty = true;
+  editor.value = formatted;
+  const nextCursor = Math.min(cursor, formatted.length);
+  editor.setSelectionRange(nextCursor, nextCursor);
+  setStatus("Formatted document");
+  renderAll();
+  editor.focus();
+}
+
+function formatRoseVSource(source) {
+  let depth = 0;
+  return source.split(/\r?\n/).map(line => {
+    const trimmed = line.replace(/\s+$/g, "").trim();
+    if (!trimmed) return "";
+
+    if (trimmed.startsWith("}")) depth = Math.max(0, depth - 1);
+
+    const formatted = `${"  ".repeat(depth)}${trimmed}`;
+    depth = Math.max(0, depth + braceDelta(trimmed));
+    return formatted;
+  }).join("\n");
 }
 
 function validateRoseV(source) {
