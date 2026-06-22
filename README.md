@@ -23,7 +23,7 @@ The full project wiki source is checked into [`docs/wiki/Home.md`](docs/wiki/Hom
 Download the release zip, extract it, and run:
 
 ```text
-MelonCompat Installer/MelonCompat Installer.exe
+MelonCompat-RoseMod-<version>/MelonCompat Installer.exe
 ```
 
 The installer scans Steam libraries for Unity games and shows each game's icon, platform, Unity backend, BepInEx status, and MelonLoader status.
@@ -200,6 +200,7 @@ pushd TauriInstaller
 npm install
 npm run build
 popd
+.\scripts\package-release.ps1 -Version v0.8.1-installer-fix
 ```
 
 Build outputs:
@@ -210,6 +211,8 @@ bin/Mono/Release/net6.0/MelonLoader.dll         # Mono shim
 bin/Native/Release/winhttp.dll                  # RoseMod C++ native bootstrap
 dist/installer/MelonCompatInstaller.exe         # CLI backend
 TauriInstaller/src-tauri/target/release/meloncompat-installer-tauri.exe  # Tauri GUI app
+dist/MelonCompat-RoseMod-<version>/MelonCompat Installer.exe             # packaged GUI
+dist/MelonCompat-RoseMod-<version>/backend/MelonCompatInstaller.exe      # packaged backend used by GUI
 bin/Release/netstandard2.0/RoseMod.Core.dll                   # RoseMod standalone core
 bin/RoseMod/MelonLoader/Release/netstandard2.0/MelonLoader.dll
 bin/RoseMod/BepInEx.*/*/netstandard2.0                        # RoseMod BepInEx facades

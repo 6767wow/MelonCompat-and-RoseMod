@@ -103,7 +103,7 @@ RoseMod/interop/UnityEngine.CoreModule.dll
 The release zip layout:
 
 ```text
-MelonCompatInstaller.exe
+MelonCompat Installer.exe
 backend/MelonCompatInstaller.exe
 backend/MelonCompatInstaller.pdb
 cli/MelonCompatInstaller.exe
@@ -113,11 +113,19 @@ docs/assets/meloncompat-logo.png
 docs/assets/rosemod-logo.png
 ```
 
-The root `MelonCompatInstaller.exe` is the Tauri GUI.
+The root `MelonCompat Installer.exe` is the Tauri GUI.
 
 The `backend` folder is used by the GUI.
 
 The `cli` folder is for direct command-line use.
+
+Build the release zip with:
+
+```powershell
+.\scripts\package-release.ps1 -Version v0.8.1-installer-fix
+```
+
+The script refuses to package the release if the GUI path and backend path are the same, if the GUI looks like the large CLI backend, or if the backend looks like the smaller GUI app. This prevents the old broken release shape where double-clicking `MelonCompatInstaller.exe` just opened the CLI backend and closed immediately.
 
 ## Access Denied During BepInEx Removal
 
@@ -134,4 +142,3 @@ Current behavior:
 - RoseMod replaces the active bootstrap.
 - A marker file can be written explaining the failed removal.
 - Running the installer as Administrator can move the folder into `RoseMod/Backups`.
-

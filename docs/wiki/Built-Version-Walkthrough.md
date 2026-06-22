@@ -7,10 +7,11 @@ This page explains the built/release version step by step. It is for users or ma
 The release ZIP is the user-facing package. Its exact folder names can change by release, but the expected contents are:
 
 ```text
-MelonCompat Installer/
-MelonCompat Installer/MelonCompat Installer.exe
-cli/
-cli/MelonCompatInstaller.exe
+MelonCompat-RoseMod-<version>/
+MelonCompat-RoseMod-<version>/MelonCompat Installer.exe
+MelonCompat-RoseMod-<version>/backend/MelonCompatInstaller.exe
+MelonCompat-RoseMod-<version>/cli/
+MelonCompat-RoseMod-<version>/cli/MelonCompatInstaller.exe
 ```
 
 The GUI is the normal user entry point. The CLI backend is used by the GUI and can also be used directly for debugging.

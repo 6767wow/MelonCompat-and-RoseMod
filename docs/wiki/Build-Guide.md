@@ -53,13 +53,18 @@ pushd TauriInstaller
 npm install
 npm run build
 popd
+.\scripts\package-release.ps1 -Version v0.8.1-installer-fix
 ```
 
 Expected output:
 
 ```text
 TauriInstaller/src-tauri/target/release/meloncompat-installer-tauri.exe
+dist/MelonCompat-RoseMod-<version>/MelonCompat Installer.exe
+dist/MelonCompat-RoseMod-<version>/backend/MelonCompatInstaller.exe
 ```
+
+The packaged top-level `MelonCompat Installer.exe` must be the Tauri GUI. The larger CLI backend belongs under `backend/` and `cli/`.
 
 ## RoseV IDE
 

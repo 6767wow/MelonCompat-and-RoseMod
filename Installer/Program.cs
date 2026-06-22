@@ -10,6 +10,15 @@ internal static class Program
             if (options.ShowHelp || args.Length == 0)
             {
                 PrintUsage();
+                if (args.Length == 0 && Environment.UserInteractive && !Console.IsInputRedirected)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("This is the CLI backend. For the graphical installer, run:");
+                    Console.WriteLine("  MelonCompat Installer.exe");
+                    Console.WriteLine();
+                    Console.Write("Press Enter to close...");
+                    Console.ReadLine();
+                }
                 return 0;
             }
 
